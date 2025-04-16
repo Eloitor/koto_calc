@@ -41,4 +41,8 @@ impl KotoObject for ZZ {
             unexpected => unexpected_type("Number", unexpected),
         }
     }
+
+    fn negate(&self, _vm: &mut KotoVm) -> Result<KValue> {
+        Ok(KValue::Object(KObject::from(Self(-self.0.clone()))))
+    }
 }

@@ -2,7 +2,7 @@
 // use koto::{derive::*, prelude::*, runtime};
 use koto_runtime::{Result, derive::*, prelude::*};
 
-use algebraeon::nzq::Integer;
+use algebraeon::{nzq::Integer, rings::structure::MetaFactorableStructure};
 
 #[derive(PartialEq, Clone, KotoCopy, KotoType, Eq, Debug)]
 pub struct ZZ(Integer);
@@ -12,6 +12,11 @@ impl ZZ {
     pub fn make_koto_object(n: KNumber) -> KObject {
         let my_int = Integer::from(i64::from(n));
         KObject::from(Self(my_int))
+    }
+
+    #[koto_method]
+    pub fn is_irreducible(&self) -> KValue {
+        self.0.is_irreducible().into()
     }
 }
 

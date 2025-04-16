@@ -1,0 +1,7 @@
+[package]
+name = "koto_algebraeon"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+koto_runtime = "0.15.3"

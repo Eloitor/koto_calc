@@ -217,6 +217,7 @@ fn main() -> Result<()> {
 
 fn add_modules(koto: &Koto) {
     let prelude = koto.prelude();
+    prelude.insert("algebraeon", koto_algebraeon::make_module());
     prelude.insert("color", koto_color::make_module());
     prelude.insert("geometry", koto_geometry::make_module());
     prelude.insert("json", koto_json::make_module());

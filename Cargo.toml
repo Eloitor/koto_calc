@@ -1,10 +1,14 @@
+[workspace]
+members = ["libs/*"]
+resolver = "2"
+
 [package]
 name = "koto_calc"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-algebraeon = "0.0.12"
+koto_algebraeon = { path = "libs/algebraeon" }
 anyhow = "1.0.98"
 crossterm = "0.29.0"
 home = "0.5.11"

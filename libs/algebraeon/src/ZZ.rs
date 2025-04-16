@@ -46,6 +46,17 @@ impl KotoObject for ZZ {
         Ok(KValue::Object(KObject::from(Self(-self.0.clone()))))
     }
 
+    fn multiply(&self, rhs: &KValue) -> Result<KValue> {
+        match &rhs {
+            KValue::Object(other) if other.is_a::<Self>() => {
+                let other = other.cast::<Self>().unwrap();
+                let result = self.0.clone() * other.0.clone(); // suma de `Integer`
+                Ok(KValue::Object(KObject::from(Self(result))))
+            }
+            unexpected => unexpected_type("ZZ", unexpected),
+        }
+    }
+
     fn subtract(&self, rhs: &KValue) -> Result<KValue> {
         match &rhs {
             KValue::Object(other) if other.is_a::<Self>() => {

@@ -1,5 +1,3 @@
-// use derive_more::From;
-// use koto::{derive::*, prelude::*, runtime};
 use koto_runtime::{Result, derive::*, prelude::*};
 
 use algebraeon::{nzq::Integer, rings::structure::MetaFactorableStructure};
@@ -25,7 +23,7 @@ impl KotoObject for ZZ {
         match &other {
             KValue::Object(other) if other.is_a::<Self>() => {
                 let other = other.cast::<Self>().unwrap();
-                let result = self.0.clone() + other.0.clone(); // suma de `Integer`
+                let result = self.0.clone() + other.0.clone();
                 Ok(KValue::Object(KObject::from(Self(result))))
             }
             unexpected => unexpected_type("ZZ", unexpected),
@@ -55,7 +53,7 @@ impl KotoObject for ZZ {
         match &rhs {
             KValue::Object(other) if other.is_a::<Self>() => {
                 let other = other.cast::<Self>().unwrap();
-                let result = self.0.clone() * other.0.clone(); // suma de `Integer`
+                let result = self.0.clone() * other.0.clone();
                 Ok(KValue::Object(KObject::from(Self(result))))
             }
             unexpected => unexpected_type("ZZ", unexpected),
@@ -66,7 +64,7 @@ impl KotoObject for ZZ {
         match &rhs {
             KValue::Object(other) if other.is_a::<Self>() => {
                 let other = other.cast::<Self>().unwrap();
-                let result = self.0.clone() - other.0.clone(); // suma de `Integer`
+                let result = self.0.clone() - other.0.clone();
                 Ok(KValue::Object(KObject::from(Self(result))))
             }
             unexpected => unexpected_type("ZZ", unexpected),

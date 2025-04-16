@@ -1,5 +1,7 @@
+use crate::NN::NN;
 use koto_runtime::{Result, derive::*, prelude::*};
 
+use algebraeon::nzq::traits::Abs;
 use algebraeon::{nzq::Integer, rings::structure::MetaFactorableStructure};
 
 #[derive(PartialEq, Clone, KotoCopy, KotoType, Eq, Debug)]
@@ -10,6 +12,11 @@ impl ZZ {
     pub fn make_koto_object(n: KNumber) -> KObject {
         let my_int = Integer::from(i64::from(n));
         KObject::from(Self(my_int))
+    }
+
+    #[koto_method]
+    pub fn abs(&self) -> KValue {
+        KValue::Object(KObject::from(NN::from(self.0.clone().abs())))
     }
 
     #[koto_method]

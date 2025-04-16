@@ -13,6 +13,12 @@ impl NN {
     }
 }
 
+impl From<Natural> for NN {
+    fn from(value: Natural) -> Self {
+        NN(value)
+    }
+}
+
 impl KotoObject for NN {
     fn add(&self, other: &KValue) -> Result<KValue> {
         match &other {

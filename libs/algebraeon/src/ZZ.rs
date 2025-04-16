@@ -1,4 +1,7 @@
+use std::str::FromStr;
+
 use crate::NN::NN;
+use algebraeon::rings::structure::{MetaIntegralDomain, MetaRing, MetaSemiRing};
 use koto_runtime::{Result, derive::*, prelude::*};
 
 use algebraeon::nzq::traits::Abs;
@@ -16,7 +19,7 @@ impl ZZ {
 
     #[koto_method]
     pub fn abs(&self) -> KValue {
-        KValue::Object(KObject::from(NN::from(self.0.clone().abs())))
+        KValue::Object(KObject::from(NN::from(NN(self.0.clone().abs()))))
     }
 
     #[koto_method]
@@ -32,6 +35,15 @@ impl KotoObject for ZZ {
                 let other = other.cast::<Self>().unwrap();
                 let result = self.0.clone() + other.0.clone();
                 Ok(KValue::Object(KObject::from(Self(result))))
+            }
+            KValue::Object(other) if other.is_a::<NN>() => {
+                let other = other.cast::<NN>().unwrap();
+                let result = self.0.clone() + Integer::from(other.clone().0);
+                Ok(KValue::Object(KObject::from(Self(result))))
+            }
+            KValue::Number(other) if other.is_i64() => {
+                let result = ZZ(self.0.clone() + Integer::from(i64::from(other)));
+                Ok(KValue::Object(KObject::from(result)))
             }
             unexpected => unexpected_type("ZZ", unexpected),
         }

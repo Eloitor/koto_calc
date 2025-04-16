@@ -3,19 +3,13 @@ use koto_runtime::{Result, derive::*, prelude::*};
 use algebraeon::nzq::Natural;
 
 #[derive(PartialEq, Clone, KotoCopy, KotoType, Eq, Debug)]
-pub struct NN(Natural);
+pub struct NN(pub Natural);
 
 #[koto_impl]
 impl NN {
     pub fn make_koto_object(n: KNumber) -> KObject {
         let my_int = Natural::from(u64::from(n));
         KObject::from(Self(my_int))
-    }
-}
-
-impl From<Natural> for NN {
-    fn from(value: Natural) -> Self {
-        NN(value)
     }
 }
 

@@ -16,11 +16,6 @@ impl ZZ {
 }
 
 impl KotoObject for ZZ {
-    fn display(&self, ctx: &mut DisplayContext) -> koto_runtime::Result<()> {
-        ctx.append(self.0.to_string());
-        Ok(())
-    }
-
     fn add(&self, other: &KValue) -> Result<KValue> {
         match &other {
             KValue::Object(other) if other.is_a::<Self>() => {
@@ -30,6 +25,11 @@ impl KotoObject for ZZ {
             }
             unexpected => unexpected_type("ZZ", unexpected),
         }
+    }
+
+    fn display(&self, ctx: &mut DisplayContext) -> koto_runtime::Result<()> {
+        ctx.append(self.0.to_string());
+        Ok(())
     }
 
     fn equal(&self, other: &KValue) -> Result<bool> {
@@ -44,5 +44,16 @@ impl KotoObject for ZZ {
 
     fn negate(&self, _vm: &mut KotoVm) -> Result<KValue> {
         Ok(KValue::Object(KObject::from(Self(-self.0.clone()))))
+    }
+
+    fn subtract(&self, rhs: &KValue) -> Result<KValue> {
+        match &rhs {
+            KValue::Object(other) if other.is_a::<Self>() => {
+                let other = other.cast::<Self>().unwrap();
+                let result = self.0.clone() - other.0.clone(); // suma de `Integer`
+                Ok(KValue::Object(KObject::from(Self(result))))
+            }
+            unexpected => unexpected_type("ZZ", unexpected),
+        }
     }
 }

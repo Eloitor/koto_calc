@@ -19,11 +19,8 @@ pub fn make_module() -> KMap {
         MetaKey::UnaryOp(UnaryOp::Display),
         KNativeFunction::new(|_ctx| Ok("NN".into())).into(),
     );
+    NN.add_fn("primes", |_ctx| Ok("TO DO".into()));
 
-    NN.insert_meta(
-        MetaKey::Named("primes".into()),
-        KNativeFunction::new(|_ctx| Ok("TO DO".into())).into(),
-    );
     result.insert("NN", NN);
 
     result.add_fn("ZZ", |ctx| match ctx.args() {

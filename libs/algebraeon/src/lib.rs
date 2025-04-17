@@ -16,7 +16,7 @@ pub fn make_module() -> KMap {
     );
 
     NN.insert_meta(
-        MetaKey::Named("display".into()),
+        MetaKey::UnaryOp(UnaryOp::Display),
         KNativeFunction::new(|_ctx| Ok("NN".into())).into(),
     );
 

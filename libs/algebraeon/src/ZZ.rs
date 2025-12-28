@@ -1,8 +1,9 @@
 use crate::NN::NN;
 use koto_runtime::{Result, derive::*, prelude::*};
 
+use algebraeon::nzq::Integer;
 use algebraeon::nzq::traits::Abs;
-use algebraeon::{nzq::Integer, rings::structure::MetaFactorableStructure};
+use algebraeon_rings::structure::MetaFactorableSignature;
 
 #[derive(PartialEq, Clone, KotoCopy, KotoType, Eq, Debug)]
 pub struct ZZ(Integer);

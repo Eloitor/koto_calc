@@ -16,6 +16,21 @@ impl NN {
     pub fn factorial(&self) -> KValue {
         KValue::Object(KObject::from(NN::from(NN(self.0.factorial()))))
     }
+
+    #[koto_method]
+    pub fn is_square(&self) -> KValue {
+        self.0.is_square().into()
+    }
+
+    #[koto_method]
+    pub fn sqrt_ceil(&self) -> KValue {
+        KValue::Object(KObject::from(NN::from(NN(self.0.sqrt_ceil()))))
+    }
+
+    #[koto_method]
+    pub fn sqrt_floor(&self) -> KValue {
+        KValue::Object(KObject::from(NN::from(NN(self.0.sqrt_floor()))))
+    }
 }
 
 impl KotoObject for NN {

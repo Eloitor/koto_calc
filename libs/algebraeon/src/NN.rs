@@ -11,6 +11,11 @@ impl NN {
         let my_int = Natural::from(u64::from(n));
         KObject::from(Self(my_int))
     }
+
+    #[koto_method]
+    pub fn factorial(&self) -> KValue {
+        KValue::Object(KObject::from(NN::from(NN(self.0.factorial()))))
+    }
 }
 
 impl KotoObject for NN {

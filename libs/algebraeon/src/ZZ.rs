@@ -24,6 +24,11 @@ impl ZZ {
     pub fn is_irreducible(&self) -> KValue {
         self.0.is_irreducible().into()
     }
+
+    #[koto_method]
+    pub fn is_square(&self) -> KValue {
+        self.0.is_square().into()
+    }
 }
 
 impl KotoObject for ZZ {

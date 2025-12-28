@@ -5,6 +5,6 @@ edition = "2024"
 
 [dependencies]
 algebraeon = "0.0.12"
-koto = "0.15.3"
-koto_derive = "0.15.3"
-koto_runtime = "0.15.3"
+koto = "0.16.0"
+koto_derive = "0.16.0"
+koto_runtime = "0.16.0"

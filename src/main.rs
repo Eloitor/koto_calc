@@ -3,9 +3,13 @@ mod repl;
 
 use anyhow::{Context, Result, bail};
 use crossterm::{terminal, tty::IsTty};
-use koto::prelude::*;
-use repl::{Repl, ReplSettings};
-use rustyline::EditMode;
+use koto::{
+    prelude::*,
+    serde::{from_koto_value, to_koto_value},
+};
+use koto_format::FormatOptions;
+use repl::{EditMode, Repl, ReplSettings};
+use serde::{Deserialize, Serialize};
 use std::{env, error::Error, fs, io, path::PathBuf};
 
 #[global_allocator]
@@ -24,7 +28,9 @@ FLAGS:
     -b, --show_bytecode      Show the script's compiled bytecode
     -t, --tests              Run the script's tests before running the script
     -T, --import_tests       Run the script's tests, along with any tests in imported modules
-    -c, --config PATH        Config file to load when using the REPL
+    -f, --format             Formats the input, reading from the script path if given, or from stdin
+    -c, --config PATH        Config file to load
+    -C, --print_config       Prints the default config
     -v, --version            Prints version information
     -h, --help               Prints help information
 
@@ -32,23 +38,15 @@ ARGS:
     <script>     The koto script to run, as a file path, or as a string when --eval is set
     <args>...    Arguments to pass into the script
 
-REPL CONFIGURATION:
-    Koto will read configuration settings from $HOME/.koto/repl_config.koto,
+CONFIGURATION:
+    Koto will read configuration settings from $HOME/.koto/config.koto,
     or from a file provided with the --config flag.
 
-    The default configuration settings are:
-
-    ```
-    export
-      colored_output: true
-      edit_mode: 'emacs'
-      max_history: 100
-    ```
+    Configuration settings are available for the REPL and for formatting options.
+    The default configuration can be displayed with the --print_config flag.
 
 ENV VARS:
-    KOTO_EDIT_MODE_VI   Enables the VI editing mode (Emacs bindings are enabled by default)
-    KOTO_MAX_HISTORY    The maximum number of entries to store in the REPL history (default: 100)
-    NO_COLOR            Disables colored output (enabled by default)
+    NO_COLOR     Disables colored output (enabled by default)
 ",
         version = version_string()
     )
@@ -67,9 +65,11 @@ struct KotoArgs {
     run_import_tests: bool,
     show_bytecode: bool,
     show_instructions: bool,
+    format: bool,
     script: Option<String>,
     script_args: Vec<String>,
     config_file: Option<String>,
+    print_config: bool,
 }
 
 fn parse_arguments() -> Result<KotoArgs> {
@@ -80,9 +80,11 @@ fn parse_arguments() -> Result<KotoArgs> {
     let show_bytecode = args.contains(["-b", "--show_bytecode"]);
     let run_tests = args.contains(["-t", "--tests"]);
     let run_import_tests = args.contains(["-T", "--import_tests"]);
+    let format = args.contains(["-f", "--format"]);
+    let config_file = args.opt_value_from_str(["-c", "--config"])?;
+    let print_config = args.contains(["-C", "--print_config"]);
     let help = args.contains(["-h", "--help"]);
     let version = args.contains(["-v", "--version"]);
-    let config_file = args.opt_value_from_str(["-c", "--config"])?;
 
     let script = args.subcommand()?;
 
@@ -104,9 +106,11 @@ fn parse_arguments() -> Result<KotoArgs> {
         run_import_tests,
         show_bytecode,
         show_instructions,
+        format,
         script,
         script_args,
         config_file,
+        print_config,
     })
 }
 
@@ -126,6 +130,10 @@ fn main() -> Result<()> {
     if args.version {
         println!("{}", version_string());
         return Ok(());
+    }
+
+    if args.print_config {
+        return Config::print_default();
     }
 
     let koto_settings = KotoSettings {
@@ -160,45 +168,62 @@ fn main() -> Result<()> {
     };
 
     if let Some(script) = script {
-        let mut koto = Koto::with_settings(koto_settings);
-
-        add_modules(&koto);
-
-        match koto.compile(CompileArgs {
-            script: &script,
-            script_path: script_path.map(KString::from),
-            compiler_settings: Default::default(),
-        }) {
-            Ok(chunk) => {
-                if args.show_bytecode {
-                    println!("{}\n", &Chunk::bytes_as_string(&chunk));
+        if args.format {
+            let config = load_config(args.config_file.as_ref())?;
+            let formatted = koto_format::format(&script, config.format).with_context(|| {
+                if let Some(path) = &script_path {
+                    format!("failed to format '{path}'")
+                } else {
+                    "failed to format input from stdin".to_string()
                 }
-                if args.show_instructions {
-                    println!("Constants\n---------\n{}\n", chunk.constants);
+            })?;
+            if let Some(path) = script_path {
+                fs::write(path, formatted)?;
+            } else {
+                print!("{formatted}");
+            }
+            Ok(())
+        } else {
+            let mut koto = Koto::with_settings(koto_settings);
 
-                    let script_lines = script.lines().collect::<Vec<_>>();
-                    println!(
-                        "Instructions\n------------\n{}",
-                        Chunk::instructions_as_string(chunk, &script_lines)
-                    );
+            add_modules(&koto);
+
+            match koto.compile(CompileArgs {
+                script: &script,
+                script_path: script_path.map(KString::from),
+                compiler_settings: Default::default(),
+            }) {
+                Ok(chunk) => {
+                    if args.show_bytecode {
+                        println!("{}\n", &Chunk::bytes_as_string(&chunk));
+                    }
+                    if args.show_instructions {
+                        println!("Constants\n---------\n{}\n", chunk.constants);
+
+                        let script_lines = script.lines().collect::<Vec<_>>();
+                        println!(
+                            "Instructions\n------------\n{}",
+                            Chunk::instructions_as_string(chunk.clone(), &script_lines)
+                        );
+                    }
+                    koto.set_args(args.script_args)?;
+                    match koto.run(chunk) {
+                        Ok(_) => {}
+                        Err(error) if error.source().is_some() => {
+                            bail!("{error}\n{}", error.source().unwrap())
+                        }
+                        Err(error) => {
+                            bail!("{error}")
+                        }
+                    }
                 }
-                koto.set_args(args.script_args)?;
-                match koto.run() {
-                    Ok(_) => {}
-                    Err(error) if error.source().is_some() => {
-                        bail!("{error}\n{}", error.source().unwrap())
-                    }
-                    Err(error) => {
-                        bail!("{error}")
-                    }
+                Err(error) => {
+                    bail!("{error}")
                 }
             }
-            Err(error) => {
-                bail!("{error}")
-            }
+
+            Ok(())
         }
-
-        Ok(())
     } else {
         let config = load_config(args.config_file.as_ref())?;
 
@@ -206,8 +231,9 @@ fn main() -> Result<()> {
             ReplSettings {
                 show_instructions: args.show_instructions,
                 show_bytecode: args.show_bytecode,
-                colored_output: config.colored_output,
-                edit_mode: config.edit_mode,
+                colored_output: config.repl.colored_output,
+                edit_mode: config.repl.edit_mode,
+                max_history_size: config.repl.max_history,
             },
             koto_settings,
         )?
@@ -228,13 +254,35 @@ fn add_modules(koto: &Koto) {
     prelude.insert("yaml", koto_yaml::make_module());
 }
 
+#[derive(Deserialize, Serialize, Default, Debug)]
+#[serde(default)]
 struct Config {
+    format: FormatOptions,
+    repl: ReplConfig,
+}
+
+impl Config {
+    fn print_default() -> Result<()> {
+        let render_script = include_str!("render_export_map.koto");
+        let mut koto = Koto::default();
+        koto.compile_and_run(render_script)?;
+        let rendered: String = from_koto_value(
+            koto.call_exported_function("render_export_map", &[to_koto_value(Config::default())?])?,
+        )?;
+        println!("{rendered}");
+        Ok(())
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
+struct ReplConfig {
     edit_mode: EditMode,
     colored_output: bool,
     max_history: usize,
 }
 
-impl Default for Config {
+impl Default for ReplConfig {
     fn default() -> Self {
         Self {
             edit_mode: EditMode::Emacs,
@@ -245,8 +293,6 @@ impl Default for Config {
 }
 
 fn load_config(config_path: Option<&String>) -> Result<Config> {
-    let mut config = Config::default();
-
     let config_path = config_path.map_or_else(
         || {
             home::home_dir()
@@ -261,7 +307,7 @@ fn load_config(config_path: Option<&String>) -> Result<Config> {
     );
 
     // Load the config file if it exists
-    if let Some(config_path) = config_path {
+    let config = if let Some(config_path) = config_path {
         let script = fs::read_to_string(&config_path).context("Failed to load the config file")?;
 
         let mut koto = Koto::new();
@@ -269,55 +315,10 @@ fn load_config(config_path: Option<&String>) -> Result<Config> {
             bail!("error while loading config: {e}");
         }
 
-        let exports = koto.exports().data();
-        match exports.get("repl") {
-            Some(KValue::Map(repl_config)) => {
-                let repl_config = repl_config.data();
-                match repl_config.get("colored_output") {
-                    Some(KValue::Bool(value)) => config.colored_output = *value,
-                    Some(_) => bail!("expected bool for colored_output setting"),
-                    None => {}
-                }
-                match repl_config.get("edit_mode") {
-                    Some(KValue::Str(value)) => match value.as_str() {
-                        "emacs" => config.edit_mode = EditMode::Emacs,
-                        "vi" => config.edit_mode = EditMode::Vi,
-                        other => {
-                            bail!(
-                                "invalid edit mode '{other}',
-                                         valid options are 'emacs' or 'vi'"
-                            )
-                        }
-                    },
-                    Some(_) => bail!("expected string for edit_mode setting"),
-                    None => {}
-                }
-                match repl_config.get("max_history") {
-                    Some(KValue::Number(value)) => match i64::from(value) {
-                        value if value > 0 => config.max_history = value as usize,
-                        _ => bail!("expected positive number for max_history setting"),
-                    },
-                    Some(_) => bail!("expected positive number for max_history setting"),
-                    None => {}
-                }
-            }
-            Some(_) => bail!("expected map for repl settings"),
-            None => {}
-        }
-    }
-
-    // Apply environment variables
-    if env::var("KOTO_EDIT_MODE_VI").is_ok() {
-        config.edit_mode = EditMode::Vi
+        from_koto_value(koto.exports().clone()).context("error while loading config file")?
+    } else {
+        Config::default()
     };
-
-    if let Ok(value) = env::var("KOTO_MAX_HISTORY") {
-        if let Ok(value) = value.parse::<usize>() {
-            config.max_history = value;
-        } else {
-            bail!("expected integer for KOTO_MAX_HISTORY environment variable");
-        }
-    }
 
     Ok(config)
 }

@@ -61,7 +61,7 @@ impl KotoObject for ZZ {
         }
     }
 
-    fn negate(&self, _vm: &mut KotoVm) -> Result<KValue> {
+    fn negate(&self) -> Result<KValue> {
         Ok(KValue::Object(KObject::from(Self(-self.0.clone()))))
     }
 

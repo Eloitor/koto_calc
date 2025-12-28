@@ -3,7 +3,7 @@ mod ZZ;
 use koto_runtime::prelude::*;
 
 pub fn make_module() -> KMap {
-    let mut result = KMap::default();
+    let result = KMap::default();
 
     let mut NN = KMap::default();
     NN.insert_meta(

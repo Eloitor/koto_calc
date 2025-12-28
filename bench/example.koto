@@ -1,0 +1,9 @@
+from algebraeon import NN
+
+t = os.start_timer()
+sum = NN(0)
+for x in 1..=1000
+  sum = sum + NN(x).factorial()
+
+print sum
+print "Elapsed time: {t.elapsed()} seconds"

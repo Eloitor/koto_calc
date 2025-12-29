@@ -13,6 +13,11 @@ impl NN {
     }
 
     #[koto_method]
+    pub fn bitcount(&self) -> KValue {
+        KValue::from(self.0.bitcount())
+    }
+
+    #[koto_method]
     pub fn factorial(&self) -> KValue {
         KValue::Object(KObject::from(NN::from(NN(self.0.factorial()))))
     }

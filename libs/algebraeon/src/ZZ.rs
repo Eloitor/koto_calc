@@ -33,7 +33,7 @@ impl ZZ {
 
 impl KotoObject for ZZ {
     fn add(&self, other: &KValue) -> Result<KValue> {
-        match &other {
+        match other {
             KValue::Object(other) if other.is_a::<Self>() => {
                 let other = other.cast::<Self>().unwrap();
                 let result = self.0.clone() + other.0.clone();
@@ -58,7 +58,7 @@ impl KotoObject for ZZ {
     }
 
     fn equal(&self, other: &KValue) -> Result<bool> {
-        match &other {
+        match other {
             KValue::Object(other) if other.is_a::<Self>() => {
                 let other = other.cast::<Self>().unwrap();
                 Ok(self.0 == other.0)
@@ -72,7 +72,7 @@ impl KotoObject for ZZ {
     }
 
     fn multiply(&self, rhs: &KValue) -> Result<KValue> {
-        match &rhs {
+        match rhs {
             KValue::Object(other) if other.is_a::<Self>() => {
                 let other = other.cast::<Self>().unwrap();
                 let result = self.0.clone() * other.0.clone();
@@ -83,13 +83,53 @@ impl KotoObject for ZZ {
     }
 
     fn subtract(&self, rhs: &KValue) -> Result<KValue> {
-        match &rhs {
+        match rhs {
             KValue::Object(other) if other.is_a::<Self>() => {
                 let other = other.cast::<Self>().unwrap();
                 let result = self.0.clone() - other.0.clone();
                 Ok(KValue::Object(KObject::from(Self(result))))
             }
             unexpected => unexpected_type("ZZ", unexpected),
+        }
+    }
+
+    fn add_assign(&mut self, other: &KValue) -> Result<()> {
+        match other {
+            KValue::Object(other) if other.is_a::<Self>() => {
+                let other = other.cast::<Self>().unwrap();
+                self.0 += other.0.clone();
+                Ok(())
+            }
+            KValue::Object(other) if other.is_a::<NN>() => {
+                let other = other.cast::<NN>().unwrap();
+                self.0 += Integer::from(other.0.clone());
+                Ok(())
+            }
+            KValue::Number(other) if other.is_i64() => {
+                self.0 += Integer::from(i64::from(other));
+                Ok(())
+            }
+            unexpected => unexpected_type("ZZ, NN, or Number", unexpected),
+        }
+    }
+
+    fn multiply_assign(&mut self, other: &KValue) -> Result<()> {
+        match other {
+            KValue::Object(other) if other.is_a::<Self>() => {
+                let other = other.cast::<Self>().unwrap();
+                self.0 *= other.0.clone();
+                Ok(())
+            }
+            KValue::Object(other) if other.is_a::<NN>() => {
+                let other = other.cast::<NN>().unwrap();
+                self.0 *= Integer::from(other.0.clone());
+                Ok(())
+            }
+            KValue::Number(other) if other.is_i64() => {
+                self.0 *= Integer::from(i64::from(other));
+                Ok(())
+            }
+            unexpected => unexpected_type("ZZ, NN, or Number", unexpected),
         }
     }
 }

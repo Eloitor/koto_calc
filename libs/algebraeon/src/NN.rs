@@ -35,7 +35,7 @@ impl NN {
 
 impl KotoObject for NN {
     fn add(&self, other: &KValue) -> Result<KValue> {
-        match &other {
+        match other {
             KValue::Object(other) if other.is_a::<Self>() => {
                 let other = other.cast::<Self>().unwrap();
                 let result = self.0.clone() + other.0.clone();
@@ -51,7 +51,7 @@ impl KotoObject for NN {
     }
 
     fn equal(&self, other: &KValue) -> Result<bool> {
-        match &other {
+        match other {
             KValue::Object(other) if other.is_a::<Self>() => {
                 let other = other.cast::<Self>().unwrap();
                 Ok(self.0 == other.0)
@@ -61,7 +61,7 @@ impl KotoObject for NN {
     }
 
     fn multiply(&self, rhs: &KValue) -> Result<KValue> {
-        match &rhs {
+        match rhs {
             KValue::Object(other) if other.is_a::<Self>() => {
                 let other = other.cast::<Self>().unwrap();
                 let result = self.0.clone() * other.0.clone();
@@ -72,7 +72,7 @@ impl KotoObject for NN {
     }
 
     fn subtract(&self, rhs: &KValue) -> Result<KValue> {
-        match &rhs {
+        match rhs {
             KValue::Object(other) if other.is_a::<Self>() => {
                 let other = other.cast::<Self>().unwrap();
                 let result = self.0.clone() - other.0.clone();

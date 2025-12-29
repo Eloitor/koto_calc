@@ -17,6 +17,11 @@ from algebraeon import NN, ZZ
   assert_eq NN(17).sqrt_floor(), NN(4)
   assert_eq NN(17).sqrt_ceil(), NN(5)
 
+  a = NN(5)
+  a += NN(1)
+  a *= NN(2)
+  assert_eq a, NN(12)
+
 @test zz_tests = ||
   write 'Testing ZZ \t'
   assert_eq ZZ(-9).abs(), NN(9)
@@ -27,6 +32,15 @@ from algebraeon import NN, ZZ
   assert_eq ZZ(5) + NN(3), ZZ(8)
   assert_eq ZZ(7) + 5, ZZ(12)
   assert_eq ZZ(4) * ZZ(-2), ZZ(-8)
+
+  a = ZZ(5)
+  a += ZZ(1)
+  a += 1
+  a += NN(2)
+  a *= NN(3)
+  a *= 2
+  assert_eq a, ZZ(54)
+  
 
 @main = ||
   print 'Algebraeon Koto tests passed'

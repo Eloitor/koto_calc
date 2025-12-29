@@ -92,4 +92,15 @@ impl KotoObject for NN {
             unexpected => unexpected_type("NN", unexpected),
         }
     }
+
+    fn multiply_assign(&mut self, other: &KValue) -> Result<()> {
+        match other {
+            KValue::Object(other) if other.is_a::<Self>() => {
+                let other = other.cast::<Self>().unwrap();
+                self.0 *= other.0.clone();
+                Ok(())
+            }
+            unexpected => unexpected_type("NN", unexpected),
+        }
+    }
 }

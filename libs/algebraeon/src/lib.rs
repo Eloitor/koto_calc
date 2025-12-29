@@ -2,6 +2,10 @@ mod NN;
 mod ZZ;
 use koto_runtime::prelude::*;
 
+pub fn version_string() -> &'static str {
+    env!("CARGO_PKG_VERSION")
+}
+
 pub fn make_module() -> KMap {
     let result = KMap::default();
 

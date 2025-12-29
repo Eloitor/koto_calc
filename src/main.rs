@@ -20,7 +20,7 @@ fn help_string() -> String {
         "{version}
 
 USAGE:
-    koto [FLAGS] [script] [<args>...]
+    koto_calc [FLAGS] [script] [<args>...]
 
 FLAGS:
     -e, --eval               Evaluate the script as a string instead of loading it from disk
@@ -53,7 +53,12 @@ ENV VARS:
 }
 
 fn version_string() -> String {
-    format!("Koto {}", env!("CARGO_PKG_VERSION"))
+    format!(
+        "koto_calc {} (koto {}, algebraeon {})",
+        env!("CARGO_PKG_VERSION"),
+        koto_core_version(),
+        algebraeon_core_version()
+    )
 }
 
 #[derive(Debug, Default)]
@@ -321,6 +326,14 @@ fn load_config(config_path: Option<&String>) -> Result<Config> {
     };
 
     Ok(config)
+}
+
+pub(crate) fn koto_core_version() -> &'static str {
+    option_env!("KOTO_DEP_VERSION").unwrap_or(env!("CARGO_PKG_VERSION"))
+}
+
+pub(crate) fn algebraeon_core_version() -> &'static str {
+    option_env!("ALGEBRAEON_DEP_VERSION").unwrap_or_else(|| koto_algebraeon::version_string())
 }
 
 fn terminal_width() -> usize {

@@ -6,6 +6,7 @@ resolver = "2"
 name = "koto_calc"
 version = "0.1.1"
 edition = "2024"
+build = "build.rs"
 
 [dependencies]
 koto_algebraeon = { path = "libs/algebraeon" }
@@ -29,3 +30,7 @@ pulldown-cmark = "0.13.0"
 rustyline = { version = "16.0.0", default-features = true }
 serde = "1.0.228"
 textwrap = "0.16.2"
+
+[dev-dependencies]
+assert_cmd = "2.0.12"
+predicates = "3.1.0"

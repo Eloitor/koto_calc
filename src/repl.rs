@@ -12,8 +12,9 @@ use rustyline::{CompletionType, Config, Editor, error::ReadlineError, history::D
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    algebraeon_core_version,
     help::{HELP_INDENT, Help},
-    wrap_string_with_indent, wrap_string_with_prefix,
+    koto_core_version, wrap_string_with_indent, wrap_string_with_prefix,
 };
 
 macro_rules! print_wrapped_indented {
@@ -137,11 +138,13 @@ impl Repl {
     }
 
     pub fn run(&mut self) -> Result<()> {
-        let version = env!("CARGO_PKG_VERSION");
+        let cli_version = env!("CARGO_PKG_VERSION");
+        let koto_version = koto_core_version();
+        let algebraeon_version = algebraeon_core_version();
         writeln!(
             self.stdout,
             "\
-Welcome to Koto v{version}
+Welcome to koto_calc v{cli_version} (koto v{koto_version}, algebraeon v{algebraeon_version})
 Run `help` for more information
 "
         )?;

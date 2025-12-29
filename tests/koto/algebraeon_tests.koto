@@ -1,0 +1,32 @@
+# Algebraeon interoperability checks written directly in Koto.
+# Run with: `cargo run -- --tests tests/koto/algebraeon_tests.koto`
+
+write = |s| io.stdout().write(s)
+from algebraeon import NN, ZZ
+
+@post_test = ||
+  print 'ok'
+
+@test nn_tests = ||
+  write 'Testing NN \t'
+  assert_eq NN(5).factorial(), NN(120)
+  assert_eq NN(5) - NN(3), NN(2)
+
+  assert NN(16).is_square()
+  assert not NN(18).is_square()
+  assert_eq NN(17).sqrt_floor(), NN(4)
+  assert_eq NN(17).sqrt_ceil(), NN(5)
+
+@test zz_tests = ||
+  write 'Testing ZZ \t'
+  assert_eq ZZ(-9).abs(), NN(9)
+  assert ZZ(9).is_square()
+  assert not ZZ(10).is_square()
+
+  assert_eq ZZ(5) + ZZ(-3), ZZ(2)
+  assert_eq ZZ(5) + NN(3), ZZ(8)
+  assert_eq ZZ(7) + 5, ZZ(12)
+  assert_eq ZZ(4) * ZZ(-2), ZZ(-8)
+
+@main = ||
+  print 'Algebraeon Koto tests passed'

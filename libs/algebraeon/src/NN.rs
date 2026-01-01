@@ -7,9 +7,14 @@ pub struct NN(pub Natural);
 
 #[koto_impl]
 impl NN {
-    pub fn make_koto_object(n: KNumber) -> KObject {
-        let my_int = Natural::from(u64::from(n));
-        KObject::from(Self(my_int))
+    pub fn make_koto_object(n: KNumber) -> Result<KObject>{
+        let num = u64::from(n);
+        if num > 18446744073709551614u64 {
+            runtime_error!("This Natural number is too big. Use a string instead.")
+        } else {
+            let my_int = Natural::from(num);
+            Ok(KObject::from(Self(my_int)))
+        }
     }
 
     #[koto_method]

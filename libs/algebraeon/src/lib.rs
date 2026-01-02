@@ -41,8 +41,24 @@ pub fn make_module() -> KMap {
                 let result_nn = KObject::from(crate::NN::NN(result_natural));
                 Ok(result_nn.into())
             } else {
-                // If not both NN::NN, return the first object as before
-                Ok(n.clone().into())
+                // If not both NN::NN, return an error with the original arguments
+                unexpected_args("|NN, NN|", &[n.clone().into(), m.clone().into()])
+            }
+        }
+        unexpected => unexpected_args("|Object, Object|", unexpected),
+    });
+
+    result.add_fn("lcm", |ctx| match ctx.args() {
+        [KValue::Object(n), KValue::Object(m)] => {
+            // Check if both objects are NN::NN
+            if let (Ok(nn_n), Ok(nn_m)) = (n.cast::<crate::NN::NN>(), m.cast::<crate::NN::NN>()) {
+                // Call the gcd function on the Natural values
+                let result_natural = algebraeon::nzq::lcm(nn_n.0.clone(), nn_m.0.clone());
+                let result_nn = KObject::from(crate::NN::NN(result_natural));
+                Ok(result_nn.into())
+            } else {
+                // If not both NN::NN, return an error with the original arguments
+                unexpected_args("|NN, NN|", &[n.clone().into(), m.clone().into()])
             }
         }
         unexpected => unexpected_args("|Object, Object|", unexpected),

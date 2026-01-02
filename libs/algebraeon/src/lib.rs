@@ -13,6 +13,7 @@ pub fn make_module() -> KMap {
     nn.insert_meta(
         MetaKey::Call,
         KNativeFunction::new(|ctx| match ctx.args() {
+            [] => NN::NN::generator(ctx),
             [KValue::Number(n)] => Ok(NN::NN::make_koto_object(*n).into()),
             unexpected => unexpected_args("|Number|", unexpected),
         })

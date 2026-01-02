@@ -36,6 +36,43 @@ impl NN {
     pub fn sqrt_floor(&self) -> KValue {
         KValue::Object(KObject::from(NN::from(NN(self.0.sqrt_floor()))))
     }
+
+    pub fn generator(_ctx: &mut CallContext) -> Result<KValue> {
+        // Create a KMap that will act as our generator
+        let mut generator_map = KMap::default();
+
+        // Initialize the counter in the map's data using ValueKey
+        use koto_runtime::ValueKey;
+        generator_map.data_mut().insert(ValueKey::from("counter"), KValue::Number(0.into()));
+
+        // Add the @next function to the metamap
+        generator_map.insert_meta(
+            MetaKey::Named("next".into()),
+            KNativeFunction::new(|ctx| -> Result<KValue> {
+                // Get the current counter value from the instance (which should be our KMap)
+                let counter_value = if let KValue::Map(map) = ctx.instance() {
+                    match map.data().get(&ValueKey::from("counter")) {
+                        Some(KValue::Number(n)) => n.try_into().unwrap_or(0u64),
+                        _ => 0,
+                    }
+                } else {
+                    0
+                };
+
+                // Create the result (current counter as NN)
+                let result = KValue::Object(KObject::from(NN(Natural::from(counter_value))));
+
+                // Update the counter in the instance data for the next call
+                if let KValue::Map(map) = ctx.instance() {
+                    map.data_mut().insert(ValueKey::from("counter"), KValue::Number((counter_value + 1).into()));
+                }
+
+                Ok(result)
+            }).into(),
+        );
+
+        Ok(generator_map.into())
+    }
 }
 
 impl KotoObject for NN {

@@ -1,6 +1,7 @@
 use koto_runtime::{IsIterable, KIteratorOutput, KotoVm, Result, derive::*, prelude::*};
 
 use algebraeon::nzq::Natural;
+use algebraeon_rings::natural::NaturalFns;
 
 #[derive(PartialEq, Clone, KotoCopy, KotoType, Eq, Debug)]
 pub struct NNIterator {
@@ -25,6 +26,11 @@ impl NN {
     #[koto_method]
     pub fn bitcount(&self) -> KValue {
         KValue::from(self.0.bitcount())
+    }
+
+    #[koto_method]
+    pub fn is_prime(&self) -> KValue {
+        KValue::from(self.0.is_prime())
     }
 
     #[koto_method]

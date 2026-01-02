@@ -1,6 +1,17 @@
-use koto_runtime::{Result, derive::*, prelude::*};
+use koto_runtime::{IsIterable, KIteratorOutput, KotoVm, Result, derive::*, prelude::*};
 
 use algebraeon::nzq::Natural;
+
+// Define the NNIterator struct
+#[derive(PartialEq, Clone, KotoCopy, KotoType, Eq, Debug)]
+pub struct NNIterator {
+    pub counter: Natural,
+}
+
+#[koto_impl]
+impl NNIterator {
+    // Empty implementation block to satisfy Koto requirements
+}
 
 #[derive(PartialEq, Clone, KotoCopy, KotoType, Eq, Debug)]
 pub struct NN(pub Natural);
@@ -38,40 +49,23 @@ impl NN {
     }
 
     pub fn generator(_ctx: &mut CallContext) -> Result<KValue> {
-        // Create a KMap that will act as our generator
-        let mut generator_map = KMap::default();
+        // Create a new iterator object
+        let nn_iterator = NNIterator {
+            counter: Natural::ZERO,
+        };
+        Ok(KValue::Object(KObject::from(nn_iterator)))
+    }
+}
 
-        // Initialize the counter in the map's data using ValueKey
-        use koto_runtime::ValueKey;
-        generator_map.data_mut().insert(ValueKey::from("counter"), KValue::Number(0.into()));
+impl KotoObject for NNIterator {
+    fn is_iterable(&self) -> IsIterable {
+        IsIterable::Iterable
+    }
 
-        // Add the @next function to the metamap
-        generator_map.insert_meta(
-            MetaKey::Named("next".into()),
-            KNativeFunction::new(|ctx| -> Result<KValue> {
-                // Get the current counter value from the instance (which should be our KMap)
-                let counter_value = if let KValue::Map(map) = ctx.instance() {
-                    match map.data().get(&ValueKey::from("counter")) {
-                        Some(KValue::Number(n)) => n.try_into().unwrap_or(0u64),
-                        _ => 0,
-                    }
-                } else {
-                    0
-                };
-
-                // Create the result (current counter as NN)
-                let result = KValue::Object(KObject::from(NN(Natural::from(counter_value))));
-
-                // Update the counter in the instance data for the next call
-                if let KValue::Map(map) = ctx.instance() {
-                    map.data_mut().insert(ValueKey::from("counter"), KValue::Number((counter_value + 1).into()));
-                }
-
-                Ok(result)
-            }).into(),
-        );
-
-        Ok(generator_map.into())
+    fn iterator_next(&mut self, _vm: &mut KotoVm) -> Option<KIteratorOutput> {
+        let result = KValue::Object(KObject::from(NN(self.counter.clone())));
+        self.counter += Natural::ONE;
+        Some(KIteratorOutput::Value(result))
     }
 }
 
@@ -144,5 +138,9 @@ impl KotoObject for NN {
             }
             unexpected => unexpected_type("NN", unexpected),
         }
+    }
+
+    fn is_iterable(&self) -> IsIterable {
+        IsIterable::Iterable
     }
 }

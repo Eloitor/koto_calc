@@ -2,7 +2,6 @@ use koto_runtime::{IsIterable, KIteratorOutput, KotoVm, Result, derive::*, prelu
 
 use algebraeon::nzq::Natural;
 
-// Define the NNIterator struct
 #[derive(PartialEq, Clone, KotoCopy, KotoType, Eq, Debug)]
 pub struct NNIterator {
     pub counter: Natural,

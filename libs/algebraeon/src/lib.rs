@@ -9,8 +9,8 @@ pub fn version_string() -> &'static str {
 pub fn make_module() -> KMap {
     let result = KMap::default();
 
-    let mut NN = KMap::default();
-    NN.insert_meta(
+    let mut nn = KMap::default();
+    nn.insert_meta(
         MetaKey::Call,
         KNativeFunction::new(|ctx| match ctx.args() {
             [KValue::Number(n)] => Ok(NN::NN::make_koto_object(*n).into()),
@@ -19,19 +19,32 @@ pub fn make_module() -> KMap {
         .into(),
     );
 
-    NN.insert_meta(
+    nn.insert_meta(
         MetaKey::UnaryOp(UnaryOp::Display),
         KNativeFunction::new(|_ctx| Ok("NN".into())).into(),
     );
-    NN.add_fn("primes", |_ctx| Ok("TO DO".into()));
+    nn.add_fn("primes", |_ctx| Ok("TO DO".into()));
 
-    result.insert("NN", NN);
+    result.insert("NN", nn);
 
-    result.add_fn("ZZ", |ctx| match ctx.args() {
-        [KValue::Number(n)] => Ok(ZZ::ZZ::make_koto_object(*n).into()),
-        unexpected => unexpected_args("|Number|", unexpected),
-    });
+    let mut zz = KMap::default();
 
+    zz.insert_meta(
+        MetaKey::Call,
+        KNativeFunction::new(|ctx| match ctx.args() {
+            [KValue::Number(n)] => Ok(ZZ::ZZ::make_koto_object(*n).into()),
+            unexpected => unexpected_args("|Number|", unexpected),
+        })
+        .into(),
+    );
+
+    zz.insert_meta(
+        MetaKey::UnaryOp(UnaryOp::Display),
+        KNativeFunction::new(|_ctx| Ok("ZZ".into())).into(),
+    );
+
+    result.insert("ZZ", zz);
+    
     result.add_fn("gcd", |ctx| match ctx.args() {
         [KValue::Object(n), KValue::Object(m)] => {
             // Check if both objects are NN::NN

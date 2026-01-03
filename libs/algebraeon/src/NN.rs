@@ -64,7 +64,7 @@ impl NN {
 
 impl KotoObject for NNIterator {
     fn is_iterable(&self) -> IsIterable {
-        IsIterable::Iterable
+        IsIterable::ForwardIterator
     }
 
     fn iterator_next(&mut self, _vm: &mut KotoVm) -> Option<KIteratorOutput> {
